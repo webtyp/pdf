@@ -32,6 +32,13 @@ type gradientType struct {
 	objNum            int
 }
 
+// FirstPage says what happens to content written before the first AddPage.
+type FirstPage uint8
+
+// AutoFirstPage, passed to New, opens page 1 automatically when the first content is written.
+// Without it, such content is an error (errNoPage) instead of a corrupt file.
+const AutoFirstPage FirstPage = 1
+
 type RootDirectoryType string // RootDirectoryType is the root directory of the executable default is "." but test can set it to a different directory
 
 // MakePath joins the root directory with one or more path elements.
@@ -396,6 +403,7 @@ type Fpdf struct {
 	buffer           fmtBuffer                  // buffer holding in-memory PDF
 	pages            []*bytes.Buffer            // slice[page] of page content; 1-based
 	state            int                        // current document state
+	autoFirstPage    bool                       // open page 1 automatically on the first content (AutoFirstPage)
 	compress         bool                       // compression flag
 	k                float64                    // scale factor (number of points in user unit)
 	defOrientation   orientationType            // default orientation

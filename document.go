@@ -134,7 +134,7 @@ func NewDocument(t Typeface, opts ...Option) *Document {
 	}
 	d.initIO() // initializes logger + IO depending on build tag
 	d.files = defaultFiles()
-	d.internal = fpdf.New(documentFiles{d})
+	d.internal = fpdf.New(documentFiles{d}, fpdf.AutoFirstPage)
 	d.internal.SetMargins(20, 20, 20)
 	d.internal.SetAutoPageBreak(true, 20)
 

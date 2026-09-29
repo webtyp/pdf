@@ -58,6 +58,8 @@ func New(options ...any) (f *Fpdf) {
 			f.fontsDirName = v
 		case files.ReadWriter:
 			f.files = v
+		case FirstPage:
+			f.autoFirstPage = v == AutoFirstPage
 
 		}
 	}
@@ -1778,8 +1780,32 @@ func (f *Fpdf) putstream(b []byte) {
 	f.out("endstream")
 }
 
+// errNoPage is set when content is written before the first page exists: without it the
+// content would land before the %PDF header and corrupt the file silently.
+const errNoPage = "fpdf: content written before the first AddPage; call AddPage first or pass fpdf.AutoFirstPage to New"
+
+// beforeFirstPage handles content that arrives while no page exists (state 0): it opens the
+// first page when AutoFirstPage was requested, otherwise it records errNoPage and reports
+// that the content must be dropped.
+func (f *Fpdf) beforeFirstPage() (drop bool) {
+	if f.state != 0 {
+		return false
+	}
+	if f.autoFirstPage {
+		f.AddPage()
+		return f.state != 2
+	}
+	if f.err == nil {
+		f.err = Errf(errNoPage)
+	}
+	return true
+}
+
 // out; Add a line to the document
 func (f *Fpdf) out(s string) {
+	if f.beforeFirstPage() {
+		return
+	}
 	if f.state == 2 {
 		must(f.pages[f.page].WriteString(s))
 		must(f.pages[f.page].WriteString("\n"))
@@ -1790,6 +1816,9 @@ func (f *Fpdf) out(s string) {
 }
 
 func (f *Fpdf) put(s string) {
+	if f.beforeFirstPage() {
+		return
+	}
 	if f.state == 2 {
 		f.pages[f.page].WriteString(s)
 	} else {
