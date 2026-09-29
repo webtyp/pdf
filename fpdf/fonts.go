@@ -10,7 +10,6 @@ import (
 	. "webtyp.com/fmt"
 )
 
-
 // AddUTF8FontFromBytes  imports a TrueType font with utf-8 symbols from static
 // bytes within the executable and makes it available for use in the generated
 // document.
@@ -157,7 +156,6 @@ func getFontKey(familyStr, styleStr string) string {
 	}
 	return familyStr + styleStr
 }
-
 
 // GetFontDesc returns the font descriptor, which can be used for
 // example to find the baseline of a font. If familyStr is empty
@@ -375,18 +373,14 @@ func (f *Fpdf) addFont(familyStr, styleStr, fileStr string) {
 	if !filepath.IsAbs(fileStr) {
 		fileStr = path.Join(f.fontsPath, fileStr)
 	}
-	originalSize, err = f.fileSize(fileStr)
-	if err != nil {
-		f.SetError(err)
-		return
-	}
 	Type := "UTF8"
 	var utf8Bytes []byte
-	utf8Bytes, err = f.readFile(fileStr)
+	utf8Bytes, err = f.files.ReadFile(fileStr)
 	if err != nil {
 		f.SetError(err)
 		return
 	}
+	originalSize = int64(len(utf8Bytes))
 	reader := fileReader{readerPosition: 0, array: utf8Bytes}
 	utf8File := newUTF8Font(&reader)
 	err = utf8File.parseFile()
@@ -440,7 +434,6 @@ func (f *Fpdf) GetFontLocation() string {
 	return f.fontsPath
 }
 
-
 func (f *Fpdf) loadFontFile(name string) ([]byte, error) {
 	if f.fontLoader != nil {
 		reader, err := f.fontLoader.Open(name)
@@ -452,7 +445,7 @@ func (f *Fpdf) loadFontFile(name string) ([]byte, error) {
 			return data, err
 		}
 	}
-	return f.readFile(path.Join(f.fontsPath, name))
+	return f.files.ReadFile(path.Join(f.fontsPath, name))
 }
 
 func isAbsolutePath(p string) bool {

@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 
+	"webtyp.com/files"
 	. "webtyp.com/fmt"
 )
 
@@ -36,18 +37,8 @@ func New(options ...any) (f *Fpdf) {
 	f.rootDirectory = "."
 	f.fontsDirName = "fonts"
 	f.unitType = MM
-	// Initialize writeFile with a function that returns an error by default
-	f.writeFile = func(filePath string, content []byte) error {
-		return Errf("writeFile function not configured for this environment")
-	}
-	// Initialize readFile with a function that returns an error by default
-	f.readFile = func(filePath string) ([]byte, error) {
-		return nil, Errf("readFile function not configured for this environment")
-	}
-	// Initialize fileSize with a function that returns an error by default
-	f.fileSize = func(filePath string) (int64, error) {
-		return 0, Errf("fileSize function not configured for this environment")
-	}
+	// Closed by default: until a files.ReadWriter is passed to New, every file access fails loudly.
+	f.files = unconfiguredFiles{}
 
 	for _, opt := range options {
 		switch v := opt.(type) {
@@ -65,12 +56,8 @@ func New(options ...any) (f *Fpdf) {
 			f.rootDirectory = v
 		case FontsDirName:
 			f.fontsDirName = v
-		case WriteFileFunc:
-			f.writeFile = v
-		case ReadFileFunc:
-			f.readFile = v
-		case FileSizeFunc:
-			f.fileSize = v
+		case files.ReadWriter:
+			f.files = v
 
 		}
 	}
@@ -1623,7 +1610,7 @@ func (f *Fpdf) RegisterImageOptions(fileStr string, options ImageOptions) (info 
 		return
 	}
 
-	data, err := f.readFile(fileStr)
+	data, err := f.files.ReadFile(fileStr)
 	if err != nil {
 		f.err = err
 		return
@@ -1770,7 +1757,6 @@ func (f *Fpdf) parsepng(r io.Reader, readdpi bool) (info *ImageInfoType) {
 	return f.parsepngstream(buf, readdpi)
 }
 
-
 // newobj begins a new object
 func (f *Fpdf) newobj() {
 	// dbg("newobj")
@@ -1912,3 +1898,12 @@ func (f *Fpdf) replaceAliases() {
 		}
 	}
 }
+
+// errFilesNotConfigured is returned by every file access of an Fpdf built without a
+// files.ReadWriter option.
+const errFilesNotConfigured = "fpdf: no files.ReadWriter configured; pass one to fpdf.New"
+
+type unconfiguredFiles struct{}
+
+func (unconfiguredFiles) ReadFile(string) ([]byte, error) { return nil, Errf(errFilesNotConfigured) }
+func (unconfiguredFiles) WriteFile(string, []byte) error  { return Errf(errFilesNotConfigured) }

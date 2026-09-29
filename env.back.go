@@ -4,8 +4,10 @@
 package pdf
 
 import (
-	"webtyp.com/fmt"
 	"os"
+
+	"webtyp.com/files"
+	"webtyp.com/fmt"
 )
 
 // initIO inicializa las funciones de IO para entorno backend (no-wasm)
@@ -16,26 +18,21 @@ func (d *Document) initIO() {
 	}
 }
 
-// writeFile escribe un archivo en el sistema de archivos usando os
-func (d *Document) writeFile(filePath string, content []byte) error {
+// diskFiles is the server implementation of files.ReadWriter: plain files on disk.
+type diskFiles struct{}
+
+func (diskFiles) ReadFile(filePath string) ([]byte, error) {
+	data, err := os.ReadFile(filePath)
+	if os.IsNotExist(err) {
+		return nil, files.ErrNotExist
+	}
+	return data, err
+}
+
+func (diskFiles) WriteFile(filePath string, content []byte) error {
 	return os.WriteFile(filePath, content, 0644)
 }
 
-// readFile lee un archivo del sistema de archivos usando os
-func readFile(filePath string) ([]byte, error) {
-	return os.ReadFile(filePath)
-}
-
-// readFile lee un archivo del sistema de archivos usando os
-func (d *Document) readFile(filePath string) ([]byte, error) {
-	return readFile(filePath)
-}
-
-// fileSize obtiene el tamaño de un archivo usando os.Stat
-func (d *Document) fileSize(filePath string) (int64, error) {
-	info, err := os.Stat(filePath)
-	if err != nil {
-		return 0, err
-	}
-	return info.Size(), nil
-}
+// defaultFiles is where a Document reads fonts and images and writes its output unless
+// WithFiles says otherwise.
+func defaultFiles() files.ReadWriter { return diskFiles{} }

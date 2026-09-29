@@ -5,10 +5,11 @@ package pdf
 
 import (
 	"encoding/base64"
+	"syscall/js"
 	"webtyp.com/fetch"
+	"webtyp.com/files"
 	. "webtyp.com/fmt"
 	"webtyp.com/fmt/lang"
-	"syscall/js"
 )
 
 // initIO inicializa las funciones de IO para entorno frontend (wasm)
@@ -22,8 +23,17 @@ func (d *Document) initIO() {
 	}
 }
 
-// writeFile escribe un archivo en localStorage y dispara una descarga
-func (d *Document) writeFile(filePath string, content []byte) error {
+// browserFiles is the browser implementation of files.ReadWriter: it reads static resources
+// (fonts, images) with fetch, and writing a file stores a copy in localStorage and hands the
+// user a download.
+type browserFiles struct{}
+
+// defaultFiles is where a Document reads fonts and images and writes its output unless
+// WithFiles says otherwise.
+func defaultFiles() files.ReadWriter { return browserFiles{} }
+
+// WriteFile escribe un archivo en localStorage y dispara una descarga
+func (browserFiles) WriteFile(filePath string, content []byte) error {
 	// 1. Guardar en localStorage (como backup/persistencia simple)
 	localStorage := js.Global().Get("localStorage")
 	if !localStorage.IsUndefined() {
@@ -46,8 +56,9 @@ func (d *Document) writeFile(filePath string, content []byte) error {
 	return nil
 }
 
-// readFile lee un archivo usando fetch (para cargar recursos estáticos como fuentes e imágenes)
-func readFile(filePath string) ([]byte, error) {
+// ReadFile lee un archivo usando fetch (para cargar recursos estáticos como fuentes e imágenes).
+// Un 404 es files.ErrNotExist.
+func (browserFiles) ReadFile(filePath string) ([]byte, error) {
 	ch := make(chan struct {
 		data []byte
 		err  error
@@ -59,6 +70,13 @@ func readFile(filePath string) ([]byte, error) {
 				data []byte
 				err  error
 			}{nil, err}
+			return
+		}
+		if resp.Status == 404 {
+			ch <- struct {
+				data []byte
+				err  error
+			}{nil, files.ErrNotExist}
 			return
 		}
 		if resp.Status != 200 {
@@ -76,18 +94,4 @@ func readFile(filePath string) ([]byte, error) {
 
 	res := <-ch
 	return res.data, res.err
-}
-
-// readFile lee un archivo usando fetch (para cargar recursos estáticos como fuentes e imágenes)
-func (d *Document) readFile(filePath string) ([]byte, error) {
-	return readFile(filePath)
-}
-
-// fileSize obtiene el tamaño de un archivo de localStorage
-func (d *Document) fileSize(filePath string) (int64, error) {
-	content, err := d.readFile(filePath)
-	if err != nil {
-		return 0, err
-	}
-	return int64(len(content)), nil
 }

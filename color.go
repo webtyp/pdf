@@ -5,12 +5,12 @@ import (
 )
 
 type Theme struct {
-	Accent     color.Color // color para texto de headers (H1, H2, H3)
-	Brand      color.Color // color de marca para elementos decorativos (líneas, bandas)
-	Header     color.Color
-	Gray       color.Color
-	Body       color.Color
-	Sizes      struct {
+	Accent color.Color // color para texto de headers (H1, H2, H3)
+	Brand  color.Color // color de marca para elementos decorativos (líneas, bandas)
+	Header color.Color
+	Gray   color.Color
+	Body   color.Color
+	Sizes  struct {
 		H1, H2, H3, Body, Small float64
 	}
 	Spacing struct {
@@ -33,10 +33,10 @@ type ThemeMargin struct {
 }
 
 var DefaultTheme = Theme{
-	Accent:     "#1E3C78",
-	Header:     "#F0F4FA",
-	Gray:       "#646464",
-	Body:       "#000000",
+	Accent: "#1E3C78",
+	Header: "#F0F4FA",
+	Gray:   "#646464",
+	Body:   "#000000",
 	Sizes: struct {
 		H1, H2, H3, Body, Small float64
 	}{

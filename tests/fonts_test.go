@@ -9,7 +9,7 @@ import (
 	"webtyp.com/pdf"
 )
 
-// fontDir is relative to this test's working directory: readFile() is a plain
+// fontDir is relative to this test's working directory: the default files (disk) are plain
 // os.ReadFile, so a registered path resolves against the package dir.
 const fontDir = "../fpdf/fonts/"
 

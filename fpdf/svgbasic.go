@@ -298,7 +298,7 @@ func SVGBasicParse(buf []byte) (sig SVGBasicType, err error) {
 // basic descriptor. The SVGBasicWrite() example demonstrates this method.
 func (f *Fpdf) SVGBasicFileParse(svgFileStr string) (sig SVGBasicType, err error) {
 	var buf []byte
-	buf, err = f.readFile(svgFileStr)
+	buf, err = f.files.ReadFile(svgFileStr)
 	if err == nil {
 		sig, err = SVGBasicParse(buf)
 	}

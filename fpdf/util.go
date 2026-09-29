@@ -29,7 +29,6 @@ func sprintf(fmtStr string, args ...any) string {
 	return Sprintf(fmtStr, args...)
 }
 
-
 // utf8toutf16 converts UTF-8 to UTF-16BE; from http://www.fpdf.org/
 func utf8toutf16(s string, withBOM ...bool) string {
 	bom := true
@@ -83,7 +82,6 @@ func strIf(cnd bool, aStr, bStr string) string {
 	}
 	return bStr
 }
-
 
 // Transform moves a point by given X, Y offset
 func (p *PointType) Transform(x, y float64) PointType {

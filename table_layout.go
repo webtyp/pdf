@@ -6,10 +6,10 @@ import (
 )
 
 type TableBuilder struct {
-	doc           *Document
-	colWidths     []string // "30%", "auto", "40mm"
-	rows          [][]*CellElement
-	bg            color.Color
+	doc          *Document
+	colWidths    []string // "30%", "auto", "40mm"
+	rows         [][]*CellElement
+	bg           color.Color
 	borderBottom struct {
 		width float64
 		color color.Color
@@ -86,7 +86,9 @@ func (t *TableBuilder) Draw() *Document {
 		rowHeight := 0.0
 		cellHeights := make([]float64, len(row))
 		for i, cell := range row {
-			if i >= len(resolvedWidths) { break }
+			if i >= len(resolvedWidths) {
+				break
+			}
 			_, h := cell.measure(t.doc, resolvedWidths[i])
 			cellHeights[i] = h
 			if h > rowHeight {
@@ -108,7 +110,9 @@ func (t *TableBuilder) Draw() *Document {
 		currX := lMargin
 		currY := t.doc.getCursorY()
 		for i, cell := range row {
-			if i >= len(resolvedWidths) { break }
+			if i >= len(resolvedWidths) {
+				break
+			}
 			cell.drawWithHeight(t.doc, currX, currY, resolvedWidths[i], rowHeight)
 			currX += resolvedWidths[i]
 		}
@@ -135,7 +139,9 @@ func (t *TableBuilder) resolveWidths(availW float64) []float64 {
 			n = len(t.rows[0])
 		}
 	}
-	if n == 0 { return nil }
+	if n == 0 {
+		return nil
+	}
 
 	widths := make([]float64, n)
 	remainingW := availW
@@ -223,14 +229,20 @@ func (t *TableBuilder) draw(doc *Document, x, y, w float64) float64 {
 	for _, row := range t.rows {
 		rowHeight := 0.0
 		for i, cell := range row {
-			if i >= len(resolvedWidths) { break }
+			if i >= len(resolvedWidths) {
+				break
+			}
 			_, h := cell.measure(doc, resolvedWidths[i])
-			if h > rowHeight { rowHeight = h }
+			if h > rowHeight {
+				rowHeight = h
+			}
 		}
 
 		currX := x
 		for i, cell := range row {
-			if i >= len(resolvedWidths) { break }
+			if i >= len(resolvedWidths) {
+				break
+			}
 			cell.drawWithHeight(doc, currX, currY, resolvedWidths[i], rowHeight)
 			currX += resolvedWidths[i]
 		}
@@ -246,9 +258,13 @@ func (t *TableBuilder) measure(doc *Document, w float64) (float64, float64) {
 	for _, row := range t.rows {
 		rowHeight := 0.0
 		for i, cell := range row {
-			if i >= len(resolvedWidths) { break }
+			if i >= len(resolvedWidths) {
+				break
+			}
 			_, h := cell.measure(doc, resolvedWidths[i])
-			if h > rowHeight { rowHeight = h }
+			if h > rowHeight {
+				rowHeight = h
+			}
 		}
 		totalH += rowHeight
 	}

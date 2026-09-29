@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 	"regexp"
+	"webtyp.com/files"
 
 	. "webtyp.com/fmt"
 )
@@ -75,10 +76,10 @@ func TtfParseBytes(data []byte) (TtfRec TtfType, err error) {
 }
 
 // TtfParse extracts various metrics from a TrueType font file.
-func TtfParse(fileStr string, readFile func(string) ([]byte, error)) (TtfRec TtfType, err error) {
+func TtfParse(fileStr string, r files.Reader) (TtfRec TtfType, err error) {
 	// Read entire font file into memory
 	var data []byte
-	data, err = readFile(fileStr)
+	data, err = r.ReadFile(fileStr)
 	if err != nil {
 		return
 	}

@@ -238,8 +238,12 @@ func (i *ImageElement) draw(doc *Document, x, y, w float64) float64 {
 			imgH = imgW * info.Height() / info.Width()
 		}
 	} else {
-		if imgW == 0 { imgW = w }
-		if imgH == 0 { imgH = 10 } // Placeholder
+		if imgW == 0 {
+			imgW = w
+		}
+		if imgH == 0 {
+			imgH = 10
+		} // Placeholder
 	}
 
 	posX := x
@@ -268,8 +272,12 @@ func (i *ImageElement) measure(doc *Document, w float64) (float64, float64) {
 			imgH = imgW * info.Height() / info.Width()
 		}
 	} else {
-		if imgW == 0 { imgW = 20 }
-		if imgH == 0 { imgH = 20 }
+		if imgW == 0 {
+			imgW = 20
+		}
+		if imgH == 0 {
+			imgH = 20
+		}
 	}
 	return imgW, imgH
 }
@@ -310,7 +318,7 @@ func (l *LineElement) draw(doc *Document, x, y, w float64) float64 {
 		color = doc.theme.Body
 	}
 
-	doc.drawLineH(x, y + l.thickness, width, color, l.thickness)
+	doc.drawLineH(x, y+l.thickness, width, color, l.thickness)
 	return l.thickness * 2 // Some padding
 }
 

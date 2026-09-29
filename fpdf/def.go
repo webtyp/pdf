@@ -1,6 +1,9 @@
 package fpdf
 
-import "webtyp.com/model"
+import (
+	"webtyp.com/files"
+	"webtyp.com/model"
+)
 
 import (
 	"bytes"
@@ -42,15 +45,6 @@ func (r RootDirectoryType) MakePath(pathElements ...string) string {
 }
 
 type FontsDirName string // FontsDirName is the name of the font directory default is "fonts"
-
-// WriteFileFunc is a function type for writing files, can be customized for WebAssembly
-type WriteFileFunc func(filePath string, content []byte) error
-
-// ReadFileFunc is a function type for reading files, can be customized for WebAssembly
-type ReadFileFunc func(filePath string) ([]byte, error)
-
-// FileSizeFunc is a function type for getting file size, can be customized for WebAssembly
-type FileSizeFunc func(filePath string) (int64, error)
 
 type orientationType string
 
@@ -275,7 +269,6 @@ func (enc *idEncoder) bytes(v []byte) {
 	_, enc.err = enc.w.Write(v)
 }
 
-
 // PointConvert returns the value of pt, expressed in points (1/72 inch), as a
 // value expressed in the unit of measure specified in New(). Since font
 // management in Fpdf uses points, this method can help with line height
@@ -395,103 +388,101 @@ type PageBox struct {
 
 // Fpdf is the principal structure for creating a single PDF document
 type Fpdf struct {
-	isCurrentUTF8    bool                                        // is current font used in utf-8 mode
-	isRTL            bool                                        // is is right to left mode enabled
-	page             int                                         // current page number
-	n                int                                         // current object number
-	offsets          []int                                       // array of object offsets
-	buffer           fmtBuffer                                   // buffer holding in-memory PDF
-	pages            []*bytes.Buffer                             // slice[page] of page content; 1-based
-	state            int                                         // current document state
-	compress         bool                                        // compression flag
-	k                float64                                     // scale factor (number of points in user unit)
-	defOrientation   orientationType                             // default orientation
-	curOrientation   orientationType                             // current orientation
-	stdPageSizes     map[string]PageSize                         // standard page sizes
-	defPageSize      PageSize                                    // default page size
-	defPageBoxes     map[string]PageBox                          // default page size
-	curPageSize      PageSize                                    // current page size
-	pageSizes        map[int]PageSize                            // used for pages with non default sizes or orientations
-	pageBoxes        map[int]map[string]PageBox                  // used to define the crop, trim, bleed and art boxes
-	unitType         unit                                        // unit of measure for all rendered objects except fonts
-	wPt, hPt         float64                                     // dimensions of current page in points
-	w, h             float64                                     // dimensions of current page in user unit
-	lMargin          float64                                     // left margin
-	tMargin          float64                                     // top margin
-	rMargin          float64                                     // right margin
-	bMargin          float64                                     // page break margin
-	cMargin          float64                                     // cell margin
-	x, y             float64                                     // current position in user unit
-	lasth            float64                                     // height of last printed cell
-	lineWidth        float64                                     // line width in user unit
-	rootDirectory    RootDirectoryType                           // root directory of the executable default is "." for test change
-	fontsDirName     FontsDirName                                // fonts directory name default is "fonts"
-	fontsPath        string                                      // full path containing fonts directory included rootDirectory eg. "/home/user/docpdf/fonts"
-	fontLoader       FontLoader                                  // used to load font files from arbitrary locations
-	writeFile        func(filePath string, content []byte) error // function to write files, can be customized for WebAssembly
-	readFile         func(filePath string) ([]byte, error)       // function to read files, can be customized for WebAssembly
-	fileSize         func(filePath string) (int64, error)        // function to get file size, can be customized for WebAssembly
-	fonts            map[string]fontDefType                      // array of used fonts
-	fontFiles        map[string]fontFileType                     // array of font files
-	diffs            []string                                    // array of encoding differences
-	fontFamily       string                                      // current font family
-	fontStyle        string                                      // current font style
-	underline        bool                                        // underlining flag
-	strikeout        bool                                        // strike out flag
-	currentFont      fontDefType                                 // current font info
-	fontSizePt       float64                                     // current font size in points
-	fontSize         float64                                     // current font size in user unit
-	ws               float64                                     // word spacing
-	images           map[string]*ImageInfoType                   // array of used images
-	aliasMap         map[string]string                           // map of alias->replacement
-	pageLinks        [][]linkType                                // pageLinks[page][link], both 1-based
-	links            []intLinkType                               // array of internal links
-	attachments      []Attachment                                // slice of content to embed globally
-	pageAttachments  [][]annotationAttach                        // 1-based array of annotation for file attachments (per page)
-	outlines         []outlineType                               // array of outlines
-	outlineRoot      int                                         // root of outlines
-	autoPageBreak    bool                                        // automatic page breaking
-	acceptPageBreak  func() bool                                 // returns true to accept page break
-	pageBreakTrigger float64                                     // threshold used to trigger page breaks
-	inHeader         bool                                        // flag set when processing header
-	headerFnc        func()                                      // function provided by app and called to write header
-	headerHomeMode   bool                                        // set position to home after headerFnc is called
-	inFooter         bool                                        // flag set when processing footer
-	footerFnc        func()                                      // function provided by app and called to write footer
-	footerFncLpi     func(bool)                                  // function provided by app and called to write footer with last page flag
-	zoomMode         string                                      // zoom display mode
-	layoutMode       string                                      // layout display mode
-	nXMP             int                                         // XMP object number
-	xmp              []byte                                      // XMP metadata
-	producer         string                                      // producer
-	title            string                                      // title
-	subject          string                                      // subject
-	author           string                                      // author
-	lang             string                                      // lang
-	keywords         string                                      // keywords
-	creator          string                                      // creator
-	creationDate     pdfTime                                     // override for document CreationDate value
-	modDate          pdfTime                                     // override for document ModDate value
-	aliasNbPagesStr  string                                      // alias for total number of pages
-	pdfVersion       pdfVersion                                  // PDF version number
-	capStyle         int                                         // line cap style: butt 0, round 1, square 2
-	joinStyle        int                                         // line segment join style: miter 0, round 1, bevel 2
-	dashArray        []float64                                   // dash array
-	dashPhase        float64                                     // dash phase
-	blendList        []blendModeType                             // slice[idx] of alpha transparency modes, 1-based
-	blendMap         map[string]int                              // map into blendList
-	blendMode        string                                      // current blend mode
-	alpha            float64                                     // current transpacency
-	gradientList     []gradientType                              // slice[idx] of gradient records
-	clipNest         int                                         // Number of active clipping contexts
-	transformNest    int                                         // Number of active transformation contexts
-	err              error                                       // Set if error occurs during life cycle of instance
-	protect          protectType                                 // document protection structure
-	layer            layerRecType                                // manages optional layers in document
-	catalogSort      bool                                        // sort resource catalogs in document
-	nJs              int                                         // JavaScript object number
-	javascript       *string                                     // JavaScript code to include in the PDF
-	colorFlag        bool                                        // indicates whether fill and text colors are different
+	isCurrentUTF8    bool                       // is current font used in utf-8 mode
+	isRTL            bool                       // is is right to left mode enabled
+	page             int                        // current page number
+	n                int                        // current object number
+	offsets          []int                      // array of object offsets
+	buffer           fmtBuffer                  // buffer holding in-memory PDF
+	pages            []*bytes.Buffer            // slice[page] of page content; 1-based
+	state            int                        // current document state
+	compress         bool                       // compression flag
+	k                float64                    // scale factor (number of points in user unit)
+	defOrientation   orientationType            // default orientation
+	curOrientation   orientationType            // current orientation
+	stdPageSizes     map[string]PageSize        // standard page sizes
+	defPageSize      PageSize                   // default page size
+	defPageBoxes     map[string]PageBox         // default page size
+	curPageSize      PageSize                   // current page size
+	pageSizes        map[int]PageSize           // used for pages with non default sizes or orientations
+	pageBoxes        map[int]map[string]PageBox // used to define the crop, trim, bleed and art boxes
+	unitType         unit                       // unit of measure for all rendered objects except fonts
+	wPt, hPt         float64                    // dimensions of current page in points
+	w, h             float64                    // dimensions of current page in user unit
+	lMargin          float64                    // left margin
+	tMargin          float64                    // top margin
+	rMargin          float64                    // right margin
+	bMargin          float64                    // page break margin
+	cMargin          float64                    // cell margin
+	x, y             float64                    // current position in user unit
+	lasth            float64                    // height of last printed cell
+	lineWidth        float64                    // line width in user unit
+	rootDirectory    RootDirectoryType          // root directory of the executable default is "." for test change
+	fontsDirName     FontsDirName               // fonts directory name default is "fonts"
+	fontsPath        string                     // full path containing fonts directory included rootDirectory eg. "/home/user/docpdf/fonts"
+	fontLoader       FontLoader                 // used to load font files from arbitrary locations
+	files            files.ReadWriter           // where fonts, images and the output live; pass one to New
+	fonts            map[string]fontDefType     // array of used fonts
+	fontFiles        map[string]fontFileType    // array of font files
+	diffs            []string                   // array of encoding differences
+	fontFamily       string                     // current font family
+	fontStyle        string                     // current font style
+	underline        bool                       // underlining flag
+	strikeout        bool                       // strike out flag
+	currentFont      fontDefType                // current font info
+	fontSizePt       float64                    // current font size in points
+	fontSize         float64                    // current font size in user unit
+	ws               float64                    // word spacing
+	images           map[string]*ImageInfoType  // array of used images
+	aliasMap         map[string]string          // map of alias->replacement
+	pageLinks        [][]linkType               // pageLinks[page][link], both 1-based
+	links            []intLinkType              // array of internal links
+	attachments      []Attachment               // slice of content to embed globally
+	pageAttachments  [][]annotationAttach       // 1-based array of annotation for file attachments (per page)
+	outlines         []outlineType              // array of outlines
+	outlineRoot      int                        // root of outlines
+	autoPageBreak    bool                       // automatic page breaking
+	acceptPageBreak  func() bool                // returns true to accept page break
+	pageBreakTrigger float64                    // threshold used to trigger page breaks
+	inHeader         bool                       // flag set when processing header
+	headerFnc        func()                     // function provided by app and called to write header
+	headerHomeMode   bool                       // set position to home after headerFnc is called
+	inFooter         bool                       // flag set when processing footer
+	footerFnc        func()                     // function provided by app and called to write footer
+	footerFncLpi     func(bool)                 // function provided by app and called to write footer with last page flag
+	zoomMode         string                     // zoom display mode
+	layoutMode       string                     // layout display mode
+	nXMP             int                        // XMP object number
+	xmp              []byte                     // XMP metadata
+	producer         string                     // producer
+	title            string                     // title
+	subject          string                     // subject
+	author           string                     // author
+	lang             string                     // lang
+	keywords         string                     // keywords
+	creator          string                     // creator
+	creationDate     pdfTime                    // override for document CreationDate value
+	modDate          pdfTime                    // override for document ModDate value
+	aliasNbPagesStr  string                     // alias for total number of pages
+	pdfVersion       pdfVersion                 // PDF version number
+	capStyle         int                        // line cap style: butt 0, round 1, square 2
+	joinStyle        int                        // line segment join style: miter 0, round 1, bevel 2
+	dashArray        []float64                  // dash array
+	dashPhase        float64                    // dash phase
+	blendList        []blendModeType            // slice[idx] of alpha transparency modes, 1-based
+	blendMap         map[string]int             // map into blendList
+	blendMode        string                     // current blend mode
+	alpha            float64                    // current transpacency
+	gradientList     []gradientType             // slice[idx] of gradient records
+	clipNest         int                        // Number of active clipping contexts
+	transformNest    int                        // Number of active transformation contexts
+	err              error                      // Set if error occurs during life cycle of instance
+	protect          protectType                // document protection structure
+	layer            layerRecType               // manages optional layers in document
+	catalogSort      bool                       // sort resource catalogs in document
+	nJs              int                        // JavaScript object number
+	javascript       *string                    // JavaScript code to include in the PDF
+	colorFlag        bool                       // indicates whether fill and text colors are different
 	color            struct {
 		// Composite values of colors
 		draw, fill, text colorType
@@ -535,10 +526,9 @@ type encType struct {
 
 type encListType [256]encType
 
-
 var (
 	fontBoxDef = model.Definition{
-		Name:   "font_box",
+		Name: "font_box",
 		Fields: model.Fields{
 			{Name: "Xmin", Type: model.Int()},
 			{Name: "Ymin", Type: model.Int()},
@@ -548,7 +538,7 @@ var (
 	}
 
 	fontDescDef = model.Definition{
-		Name:   "font_desc",
+		Name: "font_desc",
 		Fields: model.Fields{
 			{Name: "Ascent", Type: model.Int()},
 			{Name: "Descent", Type: model.Int()},
@@ -561,6 +551,7 @@ var (
 		},
 	}
 )
+
 type fontBoxType struct {
 	Xmin, Ymin, Xmax, Ymax int
 }
@@ -581,10 +572,18 @@ func (f *fontBoxType) Pointers() []any {
 func (f *fontBoxType) IsNil() bool { return f == nil }
 
 func (f *fontBoxType) DecodeFields(r model.FieldReader) {
-	if v, ok := r.Int("Xmin"); ok  { f.Xmin = int(v) }
-	if v, ok := r.Int("Ymin"); ok  { f.Ymin = int(v) }
-	if v, ok := r.Int("Xmax"); ok  { f.Xmax = int(v) }
-	if v, ok := r.Int("Ymax"); ok  { f.Ymax = int(v) }
+	if v, ok := r.Int("Xmin"); ok {
+		f.Xmin = int(v)
+	}
+	if v, ok := r.Int("Ymin"); ok {
+		f.Ymin = int(v)
+	}
+	if v, ok := r.Int("Xmax"); ok {
+		f.Xmax = int(v)
+	}
+	if v, ok := r.Int("Ymax"); ok {
+		f.Ymax = int(v)
+	}
 }
 
 // Font flags for FontDescType.Flags as defined in the pdf specification.
@@ -688,14 +687,28 @@ func (f *FontDescType) Pointers() []any {
 func (f *FontDescType) IsNil() bool { return f == nil }
 
 func (f *FontDescType) DecodeFields(r model.FieldReader) {
-	if v, ok := r.Int("Ascent"); ok      { f.Ascent = int(v) }
-	if v, ok := r.Int("Descent"); ok     { f.Descent = int(v) }
-	if v, ok := r.Int("CapHeight"); ok   { f.CapHeight = int(v) }
-	if v, ok := r.Int("Flags"); ok       { f.Flags = int(v) }
+	if v, ok := r.Int("Ascent"); ok {
+		f.Ascent = int(v)
+	}
+	if v, ok := r.Int("Descent"); ok {
+		f.Descent = int(v)
+	}
+	if v, ok := r.Int("CapHeight"); ok {
+		f.CapHeight = int(v)
+	}
+	if v, ok := r.Int("Flags"); ok {
+		f.Flags = int(v)
+	}
 	r.Object("FontBBox", &f.FontBBox)
-	if v, ok := r.Int("ItalicAngle"); ok  { f.ItalicAngle = int(v) }
-	if v, ok := r.Int("StemV"); ok       { f.StemV = int(v) }
-	if v, ok := r.Int("MissingWidth"); ok { f.MissingWidth = int(v) }
+	if v, ok := r.Int("ItalicAngle"); ok {
+		f.ItalicAngle = int(v)
+	}
+	if v, ok := r.Int("StemV"); ok {
+		f.StemV = int(v)
+	}
+	if v, ok := r.Int("MissingWidth"); ok {
+		f.MissingWidth = int(v)
+	}
 }
 
 type fontDefType struct {
@@ -744,11 +757,19 @@ func (f *fontDefType) Pointers() []any {
 func (f *fontDefType) IsNil() bool { return f == nil }
 
 func (f *fontDefType) DecodeFields(r model.FieldReader) {
-	if v, ok := r.String("Tp"); ok   { f.Tp = v }
-	if v, ok := r.String("Name"); ok { f.Name = v }
+	if v, ok := r.String("Tp"); ok {
+		f.Tp = v
+	}
+	if v, ok := r.String("Name"); ok {
+		f.Name = v
+	}
 	r.Object("Desc", &f.Desc)
-	if v, ok := r.Int("Up"); ok      { f.Up = int(v) }
-	if v, ok := r.Int("Ut"); ok      { f.Ut = int(v) }
+	if v, ok := r.Int("Up"); ok {
+		f.Up = int(v)
+	}
+	if v, ok := r.Int("Ut"); ok {
+		f.Ut = int(v)
+	}
 	if ar, ok := r.Array("Cw"); ok {
 		n := ar.Len()
 		f.Cw = make([]int, n)
@@ -756,17 +777,34 @@ func (f *fontDefType) DecodeFields(r model.FieldReader) {
 			f.Cw[i] = int(ar.Int(i))
 		}
 	}
-	if v, ok := r.String("Enc"); ok  { f.Enc = v }
-	if v, ok := r.String("Diff"); ok { f.Diff = v }
-	if v, ok := r.String("File"); ok { f.File = v }
-	if v, ok := r.Int("Size1"); ok        { f.Size1 = int(v) }
-	if v, ok := r.Int("Size2"); ok        { f.Size2 = int(v) }
-	if v, ok := r.Int("OriginalSize"); ok { f.OriginalSize = int(v) }
-	if v, ok := r.Int("N"); ok            { f.N = int(v) }
-	if v, ok := r.Int("DiffN"); ok        { f.DiffN = int(v) }
-	if v, ok := r.String("i"); ok  { f.i = v }
+	if v, ok := r.String("Enc"); ok {
+		f.Enc = v
+	}
+	if v, ok := r.String("Diff"); ok {
+		f.Diff = v
+	}
+	if v, ok := r.String("File"); ok {
+		f.File = v
+	}
+	if v, ok := r.Int("Size1"); ok {
+		f.Size1 = int(v)
+	}
+	if v, ok := r.Int("Size2"); ok {
+		f.Size2 = int(v)
+	}
+	if v, ok := r.Int("OriginalSize"); ok {
+		f.OriginalSize = int(v)
+	}
+	if v, ok := r.Int("N"); ok {
+		f.N = int(v)
+	}
+	if v, ok := r.Int("DiffN"); ok {
+		f.DiffN = int(v)
+	}
+	if v, ok := r.String("i"); ok {
+		f.i = v
+	}
 }
-
 
 type fontInfoType struct {
 	Data               []byte

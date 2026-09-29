@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"webtyp.com/color"
+	"webtyp.com/files"
 	. "webtyp.com/fmt"
 	"webtyp.com/font"
 	"webtyp.com/pdf/fpdf"
@@ -37,7 +38,7 @@ func LoadDeclared(d font.Declaration) (Typeface, error) {
 
 	load := func(style font.Style) ([]byte, error) {
 		path := dir + f.Face(style) + ".ttf"
-		data, err := readFile(path)
+		data, err := defaultFiles().ReadFile(path)
 		if err != nil {
 			return nil, Errf("face %s missing: %s: %v", f.Face(style), path, err)
 		}
@@ -72,6 +73,7 @@ func LoadDeclared(d font.Declaration) (Typeface, error) {
 // Document wraps the internal fpdf.Fpdf to provide a fluent API.
 type Document struct {
 	internal *fpdf.Fpdf
+	files    files.ReadWriter
 	logger   func(message ...any)
 
 	// Resource registries
@@ -84,6 +86,24 @@ type Document struct {
 }
 
 type Option func(*Document)
+
+// WithFiles sets where the Document reads fonts and images and writes its output, e.g.
+// webtyp.com/opfs in a browser Worker or webtyp.com/files/mem in tests. Without it, a server
+// build uses the disk and a browser build uses fetch plus a download.
+func WithFiles(rw files.ReadWriter) Option {
+	return func(d *Document) {
+		d.files = rw
+	}
+}
+
+// documentFiles lets fpdf always use the Document's current files, including one set by
+// WithFiles after construction.
+type documentFiles struct{ d *Document }
+
+func (f documentFiles) ReadFile(path string) ([]byte, error) { return f.d.files.ReadFile(path) }
+func (f documentFiles) WriteFile(path string, data []byte) error {
+	return f.d.files.WriteFile(path, data)
+}
 
 func WithLogger(fn func(...any)) Option {
 	return func(d *Document) {
@@ -113,11 +133,8 @@ func NewDocument(t Typeface, opts ...Option) *Document {
 		theme:      DefaultTheme,
 	}
 	d.initIO() // initializes logger + IO depending on build tag
-	d.internal = fpdf.New(
-		fpdf.WriteFileFunc(d.writeFile),
-		fpdf.ReadFileFunc(d.readFile),
-		fpdf.FileSizeFunc(d.fileSize),
-	)
+	d.files = defaultFiles()
+	d.internal = fpdf.New(documentFiles{d})
 	d.internal.SetMargins(20, 20, 20)
 	d.internal.SetAutoPageBreak(true, 20)
 
@@ -229,7 +246,7 @@ func (d *Document) Log(message ...any) {
 
 // RegisterImage registers an image to be loaded immediately.
 func (d *Document) RegisterImage(path string) (ImageID, error) {
-	data, err := d.readFile(path)
+	data, err := d.files.ReadFile(path)
 	if err != nil {
 		return 0, err
 	}

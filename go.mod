@@ -1,6 +1,6 @@
 module webtyp.com/pdf
 
-go 1.25.2
+go 1.26.8
 
 require (
 	webtyp.com/fetch v0.1.28
@@ -16,3 +16,5 @@ require (
 	webtyp.com/font v0.0.5
 	webtyp.com/model v0.1.9
 )
+
+require webtyp.com/files v0.0.2

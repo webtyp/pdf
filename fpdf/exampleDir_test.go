@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"webtyp.com/files"
 
 	"webtyp.com/fmt"
 
@@ -29,24 +30,8 @@ func NewDocPdfTest(options ...any) *fpdf.Fpdf {
 	// add root directory to the options
 	options = append(options, rootTestDir)
 
-	// add default writeFile function using os for tests
-	options = append(options, fpdf.WriteFileFunc(func(filePath string, content []byte) error {
-		return os.WriteFile(filePath, content, 0644)
-	}))
-
-	// add default readFile function using os for tests
-	options = append(options, fpdf.ReadFileFunc(func(filePath string) ([]byte, error) {
-		return os.ReadFile(filePath)
-	}))
-
-	// add default fileSize function using os for tests
-	options = append(options, fpdf.FileSizeFunc(func(filePath string) (int64, error) {
-		info, err := os.Stat(filePath)
-		if err != nil {
-			return 0, err
-		}
-		return info.Size(), nil
-	}))
+	// tests read fonts and images from, and write output to, the real disk
+	options = append(options, testDiskFiles{})
 
 	pdf := fpdf.New(options...)
 	pdf.SetCompression(false)
@@ -173,3 +158,15 @@ func ExampleFilename() {
 	// Output:
 	// printer on fire
 }
+
+// testDiskFiles is files.ReadWriter over the real disk, for tests.
+type testDiskFiles struct{}
+
+func (testDiskFiles) ReadFile(p string) ([]byte, error) {
+	data, err := os.ReadFile(p)
+	if os.IsNotExist(err) {
+		return nil, files.ErrNotExist
+	}
+	return data, err
+}
+func (testDiskFiles) WriteFile(p string, data []byte) error { return os.WriteFile(p, data, 0644) }

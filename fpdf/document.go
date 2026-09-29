@@ -422,8 +422,7 @@ func (f *Fpdf) OutputFileAndClose(fileStr string) error {
 		return f.err
 	}
 
-	// Use the writeFile function to write the content
-	err := f.writeFile(fileStr, buf.Bytes())
+	err := f.files.WriteFile(fileStr, buf.Bytes())
 	if err != nil {
 		f.err = err
 		return f.err
