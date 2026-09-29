@@ -1,5 +1,7 @@
 webtyp.com/color v0.1.2 h1:PN2vx9jtlwFsu2juQoaj0GEJMY/ex3fQDcop20V8+ik=
 webtyp.com/color v0.1.2/go.mod h1:p5n4e0KRiPavkkQajtQKoMAU7C+1yx86AZlzMWTJhC8=
+webtyp.com/disk v0.1.0 h1:qYec+pF19jEMl6CocCyERvNEYvHoWmN3eLXmbd4GzQU=
+webtyp.com/disk v0.1.0/go.mod h1:i+eQjZKEw9DcsdYp6V2I9zenyva2nhH/jpCLucWaa3I=
 webtyp.com/fetch v0.1.28 h1:Tb8NUBp/5tLWI22U0lg/YPrR1hJtR05a8VUC5UrXyns=
 webtyp.com/fetch v0.1.28/go.mod h1:ZX35mkKiyfjnJE9Ix9N+IT1ebFRTLm2fKbU0+eZ2XlA=
 webtyp.com/files v0.0.2 h1:hbJJdGgu+8JpgUIBpskZar6Adlr3CIbPIEA8eb7xA8I=

@@ -4,8 +4,7 @@
 package pdf
 
 import (
-	"os"
-
+	"webtyp.com/disk"
 	"webtyp.com/files"
 	"webtyp.com/fmt"
 )
@@ -18,21 +17,6 @@ func (d *Document) initIO() {
 	}
 }
 
-// diskFiles is the server implementation of files.ReadWriter: plain files on disk.
-type diskFiles struct{}
-
-func (diskFiles) ReadFile(filePath string) ([]byte, error) {
-	data, err := os.ReadFile(filePath)
-	if os.IsNotExist(err) {
-		return nil, files.ErrNotExist
-	}
-	return data, err
-}
-
-func (diskFiles) WriteFile(filePath string, content []byte) error {
-	return os.WriteFile(filePath, content, 0644)
-}
-
 // defaultFiles is where a Document reads fonts and images and writes its output unless
-// WithFiles says otherwise.
-func defaultFiles() files.ReadWriter { return diskFiles{} }
+// WithFiles says otherwise: the disk.
+func defaultFiles() files.ReadWriter { return disk.Files{} }

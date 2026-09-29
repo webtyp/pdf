@@ -18,3 +18,5 @@ require (
 )
 
 require webtyp.com/files v0.0.2
+
+require webtyp.com/disk v0.1.0
