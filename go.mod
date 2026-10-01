@@ -17,6 +17,6 @@ require (
 	webtyp.com/model v0.1.9
 )
 
-require webtyp.com/files v0.0.2
+require webtyp.com/files v0.0.3
 
 require webtyp.com/disk v0.1.0
