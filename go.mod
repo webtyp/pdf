@@ -3,7 +3,7 @@ module webtyp.com/pdf
 go 1.26.8
 
 require (
-	webtyp.com/fetch v0.1.28
+	webtyp.com/fetch v0.1.29
 	webtyp.com/fmt v1.0.0
 	webtyp.com/json v0.5.27
 	webtyp.com/time v0.5.7
@@ -20,3 +20,5 @@ require (
 require webtyp.com/files v0.0.4
 
 require webtyp.com/disk v0.1.0
+
+require webtyp.com/filepath v0.1.0 // indirect
