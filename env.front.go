@@ -9,7 +9,7 @@ import (
 	"webtyp.com/fetch"
 	"webtyp.com/files"
 	. "webtyp.com/fmt"
-	"webtyp.com/fmt/lang"
+	"webtyp.com/lang"
 )
 
 // initIO inicializa las funciones de IO para entorno frontend (wasm)
