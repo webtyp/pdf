@@ -14,7 +14,7 @@ require webtyp.com/unixid v0.2.28
 require (
 	webtyp.com/color v0.1.2
 	webtyp.com/font v0.0.5
-	webtyp.com/model v0.1.9
+	webtyp.com/model v0.2.2
 )
 
 require webtyp.com/files v0.0.4
