@@ -21,7 +21,7 @@ require webtyp.com/files v0.0.4
 
 require (
 	webtyp.com/disk v0.1.0
-	webtyp.com/lang v0.1.0
+	webtyp.com/lang v0.1.1
 )
 
 require (
