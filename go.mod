@@ -9,7 +9,7 @@ require (
 	webtyp.com/time v0.5.7
 )
 
-require webtyp.com/unixid v0.2.28
+require webtyp.com/unixid v0.3.0
 
 require (
 	webtyp.com/color v0.1.2
