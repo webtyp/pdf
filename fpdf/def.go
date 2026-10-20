@@ -1,18 +1,16 @@
 package fpdf
 
 import (
-	"webtyp.com/files"
-	"webtyp.com/model"
-)
-
-import (
 	"bytes"
 	"encoding/binary"
 	"io"
 	"math"
 	"path"
 
+	"webtyp.com/files"
 	"webtyp.com/fmt"
+	"webtyp.com/model"
+	"webtyp.com/time"
 )
 
 // Version of FPDF from which this package is derived
@@ -469,8 +467,8 @@ type Fpdf struct {
 	lang             string                     // lang
 	keywords         string                     // keywords
 	creator          string                     // creator
-	creationDate     pdfTime                    // override for document CreationDate value
-	modDate          pdfTime                    // override for document ModDate value
+	creationDate     time.Unix                  // override for document CreationDate value
+	modDate          time.Unix                  // override for document ModDate value
 	aliasNbPagesStr  string                     // alias for total number of pages
 	pdfVersion       pdfVersion                 // PDF version number
 	capStyle         int                        // line cap style: butt 0, round 1, square 2

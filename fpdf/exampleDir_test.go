@@ -3,8 +3,8 @@ package fpdf_test
 import (
 	"os"
 	"path/filepath"
-	"time"
 	"webtyp.com/files"
+	"webtyp.com/time"
 
 	"webtyp.com/fmt"
 
@@ -36,8 +36,8 @@ func NewDocPdfTest(options ...any) *fpdf.Fpdf {
 	pdf := fpdf.New(options...)
 	pdf.SetCompression(false)
 	pdf.SetCatalogSort(true)
-	pdf.SetCreationDate(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC).UnixNano())
-	pdf.SetModificationDate(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC).UnixNano())
+	pdf.SetCreationDate(time.Date(2000, 1, 1, 0, 0, 0))
+	pdf.SetModificationDate(time.Date(2000, 1, 1, 0, 0, 0))
 
 	return pdf
 }

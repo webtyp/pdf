@@ -9,13 +9,14 @@ import (
 
 	"webtyp.com/files"
 	. "webtyp.com/fmt"
+	"webtyp.com/time"
 )
 
 var gl struct {
 	catalogSort  bool
 	noCompress   bool // Initial zero value indicates compression
-	creationDate pdfTime
-	modDate      pdfTime
+	creationDate time.Unix
+	modDate      time.Unix
 }
 
 type fmtBuffer struct {
